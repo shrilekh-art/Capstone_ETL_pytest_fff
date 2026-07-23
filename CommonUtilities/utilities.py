@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def sales_data_from_Linux_server(self):
-    # download the sales frile form Linux server to local via SFTP/ssh
+    # download the sales frlee form Linux server to local via SFTP/ssh
     try:
         logger.info("Sales file from Linux server doenload started...")
         ssh_client = paramiko.SSHClient()

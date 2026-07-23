@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.idea/
+.ipynb_checkpoints/
+*.log
+Reports/
+Differences/*.csv

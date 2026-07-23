@@ -16,6 +16,20 @@ jobs:
     name: Smoke Tests
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -43,19 +57,42 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install oracledb pandas sqlalchemy pymysql psycopg2-binary paramiko pytest pytest-html pytest-xdist
+        pip install -r requirements.txt
 
     - name: Setup Oracle Thin Mode
       run: |
         echo "Using oracledb thin mode - no Oracle Instant Client required"
-        # Verify oracledb is working
         python -c "import oracledb; print(f'Oracle driver version: {oracledb.__version__}'); print('Thin mode available:', hasattr(oracledb, 'init_oracle_client'))"
 
     - name: Create necessary directories
       run: |
         mkdir -p Reports Logs Differences
 
+    # NOTE: Oracle (ORACLE_HOST) and the Linux/SFTP step (LINUX_HOSTNAME) point to
+    # localhost / a private VirtualBox IP in your local .env. Neither is reachable
+    # from this GitHub-hosted runner. Those specific tests will fail here unless
+    # you either (a) point ORACLE_HOST/LINUX_HOSTNAME secrets at a real reachable
+    # host, or (b) exclude them with a pytest marker, e.g. -m "smoke and not oracle and not sftp"
     - name: Run Smoke Tests
+      env:
+        ORACLE_USER: ${{ secrets.ORACLE_USER }}
+        ORACLE_PASSWORD: ${{ secrets.ORACLE_PASSWORD }}
+        ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+        ORACLE_PORT: ${{ secrets.ORACLE_PORT }}
+        ORACLE_SERVICE: ${{ secrets.ORACLE_SERVICE }}
+        MYSQL_USER: root
+        MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+        MYSQL_HOST: 127.0.0.1
+        MYSQL_PORT: 3306
+        MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+        LINUX_HOSTNAME: ${{ secrets.LINUX_HOSTNAME }}
+        LINUX_USERNAME: ${{ secrets.LINUX_USERNAME }}
+        LINUX_PASSWORD: ${{ secrets.LINUX_PASSWORD }}
+        POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+        POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+        POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
       run: |
         pytest -v -s -m smoke --html=Reports/SmokeTestResults.html --self-contained-html --log-file=Logs/smoke_test.log --log-level=INFO
       continue-on-error: false
@@ -76,6 +113,20 @@ jobs:
     runs-on: ubuntu-latest
     needs: smoke-tests  # Run only after smoke tests pass
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -89,7 +140,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install oracledb pandas sqlalchemy pymysql psycopg2-binary paramiko pytest pytest-html pytest-xdist
+        pip install -r requirements.txt
 
     - name: Setup Oracle Thin Mode
       run: |
@@ -101,6 +152,25 @@ jobs:
         mkdir -p Reports Logs Differences
 
     - name: Run Regression Tests in Parallel
+      env:
+        ORACLE_USER: ${{ secrets.ORACLE_USER }}
+        ORACLE_PASSWORD: ${{ secrets.ORACLE_PASSWORD }}
+        ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+        ORACLE_PORT: ${{ secrets.ORACLE_PORT }}
+        ORACLE_SERVICE: ${{ secrets.ORACLE_SERVICE }}
+        MYSQL_USER: root
+        MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+        MYSQL_HOST: 127.0.0.1
+        MYSQL_PORT: 3306
+        MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+        LINUX_HOSTNAME: ${{ secrets.LINUX_HOSTNAME }}
+        LINUX_USERNAME: ${{ secrets.LINUX_USERNAME }}
+        LINUX_PASSWORD: ${{ secrets.LINUX_PASSWORD }}
+        POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+        POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+        POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
       run: |
         pytest -v -s -m regression -n auto --html=Reports/RegressionTestResults.html --self-contained-html --log-file=Logs/regression_test.log --log-level=INFO
       continue-on-error: false
@@ -120,6 +190,20 @@ jobs:
     name: Data Quality Tests
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -133,7 +217,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install oracledb pandas sqlalchemy pymysql psycopg2-binary paramiko pytest pytest-html pytest-xdist
+        pip install -r requirements.txt
 
     - name: Setup Oracle Thin Mode
       run: |
@@ -145,6 +229,25 @@ jobs:
         mkdir -p Reports Logs Differences
 
     - name: Run Data Quality Tests
+      env:
+        ORACLE_USER: ${{ secrets.ORACLE_USER }}
+        ORACLE_PASSWORD: ${{ secrets.ORACLE_PASSWORD }}
+        ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+        ORACLE_PORT: ${{ secrets.ORACLE_PORT }}
+        ORACLE_SERVICE: ${{ secrets.ORACLE_SERVICE }}
+        MYSQL_USER: root
+        MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+        MYSQL_HOST: 127.0.0.1
+        MYSQL_PORT: 3306
+        MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+        LINUX_HOSTNAME: ${{ secrets.LINUX_HOSTNAME }}
+        LINUX_USERNAME: ${{ secrets.LINUX_USERNAME }}
+        LINUX_PASSWORD: ${{ secrets.LINUX_PASSWORD }}
+        POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+        POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+        POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
       run: |
         pytest -v -s -m dq --html=Reports/DataQualityTestResults.html --self-contained-html --log-file=Logs/dq_test.log --log-level=INFO
       continue-on-error: true  # Don't fail workflow if DQ tests fail
